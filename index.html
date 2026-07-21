@@ -324,10 +324,12 @@
   // 视频装载：clips/<id>.mp4 存在则显示并悬停播放，否则保留占位框
   document.querySelectorAll('.shot').forEach(shot=>{
     const id=shot.dataset.clip, v=shot.querySelector('video');
+    v.poster='assets/posters/'+id+'.jpg';   // iOS 不播放不渲染帧，poster 兜底首屏画面
     const src=document.createElement('source');
     src.src='assets/clips/'+id+'.mp4'; src.type='video/mp4';
     src.addEventListener('error',()=>shot.classList.remove('loaded'));
-    v.addEventListener('loadeddata',()=>{
+    // loadedmetadata：iOS Safari 在 preload=metadata 下不触发 loadeddata
+    v.addEventListener('loadedmetadata',()=>{
       shot.classList.add('loaded');
       if(v.videoWidth) shot.style.aspectRatio=v.videoWidth+' / '+v.videoHeight;
     });
