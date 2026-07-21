@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Studio · 从画布到代码</title>
+<style>
+  :root{
+    --bg:#0B1220; --panel:#101A2E; --panel2:#0E1728;
+    --line:rgba(122,148,192,.16); --line-strong:rgba(122,148,192,.30);
+    --text:#D7E0EE; --muted:#5B6B85; --mint:#4FD8B8; --del:#F2718A;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);
+    font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+  ::selection{background:rgba(79,216,184,.25)}
+
+  /* ---------- 窗口标题栏 ---------- */
+  .titlebar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
+    padding:10px 20px;background:rgba(11,18,32,.85);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
+  .lights{display:flex;gap:7px}
+  .lights i{width:11px;height:11px;border-radius:50%;display:block}
+  .lights i:nth-child(1){background:#FF5F57}.lights i:nth-child(2){background:#FEBC2E}
+  .lights i:nth-child(3){background:#28C840}
+  .path{font-family:var(--mono);font-size:12.5px;color:var(--muted);letter-spacing:.02em}
+  .path b{color:var(--text);font-weight:500}
+  .titlebar nav{margin-left:auto;display:flex;gap:22px}
+  .titlebar nav a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .15s}
+  .titlebar nav a:hover,.titlebar nav a:focus-visible{color:var(--mint)}
+  a:focus-visible{outline:2px solid var(--mint);outline-offset:3px;border-radius:2px}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+
+  /* ---------- Hero ---------- */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;
+    padding:88px 0 72px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;color:var(--mint);
+    margin-bottom:18px}
+  h1{font-size:52px;font-weight:600;line-height:1.22;letter-spacing:.01em}
+  h1 .dim{color:var(--muted);font-weight:500}
+  .hero p.lead{margin-top:20px;font-size:16.5px;color:#9DAcc5;max-width:30em}
+  .chips{margin-top:30px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{font-family:var(--mono);font-size:12.5px;color:var(--mint);
+    border:1px solid rgba(79,216,184,.35);border-radius:999px;padding:5px 14px;
+    background:rgba(79,216,184,.06)}
+  .chip.gray{color:#9DACC5;border-color:var(--line-strong);background:transparent}
+
+  /* 签名：diff 块 */
+  .diff{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+  .diff-head{display:flex;justify-content:space-between;align-items:center;
+    padding:9px 16px;border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .diff-head .fname{color:#9DACC5}
+  .diff pre{font-family:var(--mono);font-size:13.5px;line-height:2.15;padding:18px 0;
+    overflow-x:auto;white-space:normal}
+  .dl{display:flex;white-space:pre;opacity:0;transform:translateY(6px);
+    animation:rise .5s ease forwards}
+  .dl .ln{width:52px;text-align:right;padding-right:16px;color:#33415C;flex:none;
+    user-select:none}
+  .dl.hunk{color:#7A94C0}
+  .dl.del{background:rgba(242,113,138,.07)}.dl.del .code{color:var(--del)}
+  .dl.add{background:rgba(79,216,184,.07)}.dl.add .code{color:var(--mint)}
+  .dl.ctx .code{color:#9DACC5}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* ---------- 分节通用 ---------- */
+  section{padding:76px 0;border-top:1px solid var(--line)}
+  .sec-eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;
+    color:var(--muted);margin-bottom:14px}
+  .sec-eyebrow b{color:var(--mint);font-weight:500}
+  h2{font-size:30px;font-weight:600;letter-spacing:.01em}
+  .sec-lead{margin-top:12px;color:#9DACC5;max-width:44em}
+
+  /* ---------- 视频窗格 ---------- */
+  .pane{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;transition:border-color .2s,transform .2s}
+  .pane:hover{border-color:rgba(79,216,184,.45)}
+  .pane-tab{display:flex;align-items:center;gap:10px;padding:9px 14px;
+    border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--mint);flex:none}
+  .dot.red{background:var(--del)}
+  .pane-tab .t{color:#9DACC5}
+  .pane-tab .side{margin-left:auto;color:var(--muted)}
+  .shot{position:relative;aspect-ratio:16/10;background:var(--panel2)}
+  .shot video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
+  .shot.loaded video{display:block}
+  .placeholder{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;
+    align-items:center;justify-content:center;
+    background:
+      linear-gradient(rgba(122,148,192,.05) 1px,transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg,rgba(122,148,192,.05) 1px,transparent 1px) 0 0/28px 100%}
+  .shot.loaded .placeholder{display:none}
+  .placeholder .tag{font-family:var(--mono);font-size:12px;color:var(--muted);
+    border:1px dashed var(--line-strong);border-radius:6px;padding:6px 12px}
+  .placeholder .hint{font-size:12.5px;color:#33415C}
+  .pane-cap{padding:14px 16px 16px}
+  .pane-cap h3{font-size:15.5px;font-weight:600}
+  .pane-cap p{margin-top:5px;font-size:13.5px;color:#9DACC5;line-height:1.7}
+
+  /* ---------- 对比区 ---------- */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:36px}
+  .input-strip{margin-top:34px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .input-strip .kbd{color:var(--text);background:var(--panel);border:1px solid var(--line);
+    border-radius:6px;padding:4px 10px}
+
+  /* 终端对比表 */
+  .term{margin-top:22px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:20px 22px;font-family:var(--mono);font-size:13.5px;
+    overflow-x:auto}
+  .term .cmd{color:var(--muted);margin-bottom:14px}
+  .term .cmd b{color:var(--mint);font-weight:500}
+  .trow{display:grid;grid-template-columns:9em 1fr 1fr;gap:14px;padding:8px 0;
+    border-top:1px dashed var(--line);white-space:nowrap}
+  .trow:first-of-type{border-top:none}
+  .trow .k{color:#7A94C0}
+  .trow .old{color:var(--muted)}
+  .trow .new{color:var(--mint)}
+  .trow.thead{color:var(--muted);font-size:12px;letter-spacing:.08em}
+  .trow.thead .new{color:var(--muted)}
+
+  /* ---------- 功能墙 ---------- */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:40px}
+
+  /* ---------- 页脚状态 ---------- */
+  footer{border-top:1px solid var(--line);padding:56px 0 72px}
+  .status{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:30px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:20px 22px}
+  .stat .k{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em}
+  .stat .v{margin-top:8px;font-size:15px;line-height:1.7}
+  .stat .v em{color:var(--mint);font-style:normal}
+  .foot-note{margin-top:34px;font-family:var(--mono);font-size:12px;color:#33415C}
+
+  /* 滚动进场 */
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media (prefers-reduced-motion:reduce){
+    .dl{animation:none;opacity:1;transform:none}
+    .reveal{transition:none;opacity:1;transform:none}
+    html{scroll-behavior:auto}
+  }
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;gap:40px;padding-top:56px}
+    h1{font-size:38px}
+    .vs,.grid,.status{grid-template-columns:1fr}
+    .trow{white-space:normal}
+  }
+</style>
+</head>
+<body>
+
+<header class="titlebar">
+  <span class="lights"><i></i><i></i><i></i></span>
+  <span class="path">fliggy / <b>agent-studio</b> / showcase</span>
+  <nav>
+    <a href="#vs">运行对比</a><a href="#features">功能演示</a><a href="#status">上线状态</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= Hero ================= -->
+  <div class="hero">
+    <div>
+      <div class="eyebrow">AGENT STUDIO · CODE-FIRST</div>
+      <h1>从画布，<br>到<span style="color:var(--mint)">代码</span>。<span class="dim"></span></h1>
+      <p class="lead">同一条 AI 搜索业务链路：在可视化平台上是数十个节点的画布；
+        在 Agent Studio 里，是一个可读、可评测、可回放的 Python 项目。</p>
+      <div class="chips">
+        <span class="chip">已投入线上使用</span>
+        <span class="chip">多条工作流完成迁移</span>
+        <span class="chip gray">与工程团队共建放量中</span>
+      </div>
+    </div>
+    <div class="diff" aria-label="迁移前后对比">
+      <div class="diff-head">
+        <span class="fname">workflow/AI搜索框_主流程.diff</span><span>@@ 迁移 @@</span>
+      </div>
+      <pre>
+<span class="dl hunk" style="animation-delay:.15s"><span class="ln">@@</span><span class="code">同一条业务链路</span></span>
+<span class="dl del" style="animation-delay:.35s"><span class="ln">-</span><span class="code">FAI 可视化画布 · 数十节点 · 六路子工作流</span></span>
+<span class="dl del" style="animation-delay:.5s"><span class="ln">-</span><span class="code">逐节点排查 · 无 diff · 无回滚</span></span>
+<span class="dl add" style="animation-delay:.7s"><span class="ln">+</span><span class="code">aisearch_main()  # Python 函数 · 拓扑 1:1 对应</span></span>
+<span class="dl add" style="animation-delay:.85s"><span class="ln">+</span><span class="code">git 版本化 · 流式可见 · 调用链回放</span></span>
+<span class="dl ctx" style="animation-delay:1.05s"><span class="ln"> </span><span class="code">输入输出完全一致</span></span>
+</pre>
+    </div>
+  </div>
+
+  <!-- ================= 运行对比 ================= -->
+  <section id="vs">
+    <div class="sec-eyebrow"><b>01</b> · SAME INPUT, TWO RUNTIMES</div>
+    <h2>同一条输入，两种运行</h2>
+    <p class="sec-lead">输入取自线上真实请求日志，两边完全相同。左边是现状，右边是 Agent Studio。</p>
+
+    <div class="input-strip">
+      <span>输入</span>
+      <span class="kbd">"千年瑶寨吊脚楼民宿"</span>
+      <span>· 线上日志原样回放（含 318 项实验参数）</span>
+    </div>
+
+    <div class="vs">
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot red"></span><span class="t">fai_4363 · 可视化画布</span><span class="side">现状</span></div>
+        <div class="shot" data-clip="fai-run"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/fai-run.mp4</span><span class="hint">待录制 · 画布全景 → 填参 → 运行 → 等待结果</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>FAI：画布运行</h3>
+          <p>画布缩至 25% 才能看全。运行中只能等待最终结果，中间过程不可见。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">aisearch_main.py · 代码项目</span><span class="side">Agent Studio</span></div>
+        <div class="shot" data-clip="studio-run"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/studio-run.mp4</span><span class="hint">待录制 · 代码总览 → 相同输入 → 流式执行</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>Studio：代码运行</h3>
+          <p>主流程是一个 Python 函数。右栏流式展开每一步，模型输出逐字可见。</p></figcaption>
+      </figure>
+    </div>
+
+    <div class="term reveal" role="table" aria-label="平台对比">
+      <div class="cmd">$ <b>diff</b> --stat fai agent-studio</div>
+      <div class="trow thead"><span class="k">维度</span><span class="old">FAI 可视化工作流</span><span class="new">AGENT STUDIO</span></div>
+      <div class="trow"><span class="k">编排形态</span><span class="old">数十节点画布</span><span class="new">十几行 Python 函数</span></div>
+      <div class="trow"><span class="k">变更管理</span><span class="old">无 diff / 无回滚</span><span class="new">git 版本化，保存即生效</span></div>
+      <div class="trow"><span class="k">运行过程</span><span class="old">仅见最终结果</span><span class="new">流式逐步可见</span></div>
+      <div class="trow"><span class="k">问题排查</span><span class="old">逐节点翻日志</span><span class="new">调用链回放 + 成本明细</span></div>
+      <div class="trow"><span class="k">效果保障</span><span class="old">人工回归</span><span class="new">用例集评测 + 自动评分</span></div>
+      <div class="trow"><span class="k">放量方式</span><span class="old">平台外配置</span><span class="new">平台内 AB / 灰度，即时生效</span></div>
+    </div>
+  </section>
+
+  <!-- ================= 功能墙 ================= -->
+  <section id="features">
+    <div class="sec-eyebrow"><b>02</b> · PLATFORM FEATURES</div>
+    <h2>平台能力，逐项演示</h2>
+    <p class="sec-lead">每段 15–40 秒；悬停即播，可拖动进度、全屏查看。</p>
+
+    <div class="grid">
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">route · 意图路由</span></div>
+        <div class="shot" data-clip="route"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/route.mp4</span><span class="hint">待录制 · 目的地输入走另一条分支</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>意图路由分支</h3>
+          <p>换一条目的地类输入（济州岛），Switch 路由自动进入目的地子流程——各意图分支都是独立的 Python 函数。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">traces · 调用链回放</span></div>
+        <div class="shot" data-clip="traces"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/traces.mp4</span><span class="hint">待录制 · 找到刚才的请求并回放</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>调用链回放</h3>
+          <p>每一步的输入输出、耗时、token 成本自动留存；模型调用有独立明细，badcase 可一键转为评测用例。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">eval · 评测系统</span></div>
+        <div class="shot" data-clip="eval"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/eval.mp4</span><span class="hint">待录制 · 数据集 → 批量运行 → 评分结果</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>评测系统</h3>
+          <p>用例集批量运行，自动评分加人工复核；改 prompt 前后，效果有量化对比。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">ab · 实验与灰度</span></div>
+        <div class="shot" data-clip="ab"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/ab.mp4</span><span class="hint">待录制 · 变体配置 → 灰度比例调整</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>AB 实验与灰度</h3>
+          <p>变体、白名单、灰度比例都在平台内配置，调整即时生效，不需要重新发布。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">models · 模型中心</span></div>
+        <div class="shot" data-clip="models"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/models.mp4</span><span class="hint">待录制 · 模型目录 → 用量成本 → 对比</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>模型中心</h3>
+          <p>模型统一接入管理，按业务方统计用量与成本；对比 Playground 支持 1–3 个模型同题并排（Max / Flash / Plus 多规格选型），比 TTFT、token 与耗时。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">ide · 项目与热加载</span></div>
+        <div class="shot" data-clip="ide-git"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/ide-git.mp4</span><span class="hint">待录制 · 项目结构 → 保存热加载</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>IDE 与项目组织</h3>
+          <p>工作流、prompt、技能按多文件项目组织，Web IDE 内直接浏览编辑；保存即热加载、多节点自动同步，也可绑定 git 仓库。</p></figcaption>
+      </figure>
+      <figure class="pane reveal">
+        <div class="pane-tab"><span class="dot"></span><span class="t">docs · 使用手册</span></div>
+        <div class="shot" data-clip="docs"><video muted loop playsinline controls preload="metadata"></video>
+          <div class="placeholder"><span class="tag">clips/docs.mp4</span><span class="hint">待录制 · 手册总览 → 快速上手 → API 参考</span></div>
+        </div>
+        <figcaption class="pane-cap"><h3>使用文档</h3>
+          <p>配套使用手册与工作台同仓维护：平台总览、10 分钟上手、开发/运营工作区指南、API 参考，工作台内一键直达。</p></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= 状态 ================= -->
+  <footer id="status">
+    <div class="sec-eyebrow"><b>03</b> · STATUS</div>
+    <h2>上线状态</h2>
+    <div class="status">
+      <div class="stat reveal"><div class="k">RUNTIME</div>
+        <div class="v"><em>已投入线上使用</em>，容器化部署与 TPP 在线引擎两条运行路径</div></div>
+      <div class="stat reveal"><div class="k">MIGRATION</div>
+        <div class="v">行程规划、AI 搜索框通用链路等<em>多条工作流</em>完成代码化迁移</div></div>
+      <div class="stat reveal"><div class="k">NEXT</div>
+        <div class="v">与工程团队<em>共同建设放量</em>；prompt、工作流逻辑、实验分桶调整即时生效</div></div>
+    </div>
+    <div class="foot-note">录屏环境：Agent Studio 与 FAI 线上环境 · 输入为线上真实请求日志</div>
+  </footer>
+
+</div>
+
+<script>
+  // 视频装载：clips/<id>.mp4 存在则显示并悬停播放，否则保留占位框
+  document.querySelectorAll('.shot').forEach(shot=>{
+    const id=shot.dataset.clip, v=shot.querySelector('video');
+    const src=document.createElement('source');
+    src.src='assets/clips/'+id+'.mp4'; src.type='video/mp4';
+    src.addEventListener('error',()=>shot.classList.remove('loaded'));
+    v.addEventListener('loadeddata',()=>{
+      shot.classList.add('loaded');
+      if(v.videoWidth) shot.style.aspectRatio=v.videoWidth+' / '+v.videoHeight;
+    });
+    v.appendChild(src);
+    const pane=shot.closest('.pane');
+    // 悬停自动播放；用户一旦手动操作过控件（点击/拖进度/全屏），移出不再自动暂停
+    v.addEventListener('pointerdown',()=>{v.dataset.manual='1'});
+    pane.addEventListener('mouseenter',()=>{
+      if(shot.classList.contains('loaded') && v.paused && !v.dataset.manual) v.play();
+    });
+    pane.addEventListener('mouseleave',()=>{
+      if(!v.dataset.manual && !document.fullscreenElement) v.pause();
+    });
+  });
+  // 滚动进场
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}
+  }),{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
