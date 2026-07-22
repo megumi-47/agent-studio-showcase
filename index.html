@@ -87,8 +87,7 @@
   .pane-tab .t{color:#9DACC5}
   .pane-tab .side{margin-left:auto;color:var(--muted)}
   .shot{position:relative;aspect-ratio:16/10;background:var(--panel2)}
-  .shot video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
-  .shot.loaded video{display:block}
+  .shot video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .placeholder{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;
     align-items:center;justify-content:center;
     background:
@@ -334,6 +333,8 @@
       if(v.videoWidth) shot.style.aspectRatio=v.videoWidth+' / '+v.videoHeight;
     });
     v.appendChild(src);
+    // 立即展示（poster 先出画面），不依赖移动端不可靠的媒体加载事件；源缺失时 error 回退占位框
+    shot.classList.add('loaded');
     const pane=shot.closest('.pane');
     // 悬停自动播放；用户一旦手动操作过控件（点击/拖进度/全屏），移出不再自动暂停
     v.addEventListener('pointerdown',()=>{v.dataset.manual='1'});
