@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agent Studio · 从画布到代码</title>
 <style>
-  /* 设计方向 E：暖白底 + 飞猪黄→天蓝柔和光晕（Stripe 式）+ 白卡 mac 窗装录屏；
-     标题吸收 Notion/Vercel 的特大黑字；终端元素保留、改浅色码卡。
-     色彩纪律：正文黑灰，主色飞猪黄（文字用深琥珀保证对比度），天蓝只作辅助光晕。 */
+  /* 深色但轻盈清新：黛蓝灰底（非近黑）+ 飞猪黄/天蓝双光晕；
+     布局改版：Hero 双栏（左大字右 diff 卡），功能演示左右交错行 + 描边大编号。
+     色彩纪律：黄=品牌与强调，天蓝=结构标签（FIG/侧标），正文只用亮灰两级。 */
   :root{
-    --bg:#FAF9F6; --card:#FFFFFF; --chrome:#F4F2EE;
-    --line:#E9E6E0; --line-strong:#D9D5CD;
-    --ink:#17202B; --muted:#5D6B7A; --faint:#98A3B0;
-    --amber:#B07A00; --amber-bright:#FFC900; --sky:#5BA8F5; --del:#D14D62;
+    --bg:#242F40; --card:#2C394D; --chrome:#334158; --stage:#0E1014;
+    --line:rgba(214,228,245,.13); --line-strong:rgba(214,228,245,.22);
+    --ink:#F1F6FC; --muted:#A9BBD0; --faint:#7A8DA6;
+    --yellow:#FFD24D; --sky:#7EC3FF; --mint:#5FE0C2; --del:#FF8AA0;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    --shadow-soft:0 1px 2px rgba(23,32,43,.05),0 12px 36px rgba(23,32,43,.08);
-    --shadow-live:0 2px 4px rgba(23,32,43,.06),0 22px 60px rgba(23,32,43,.13);
+    --shadow-soft:0 1px 2px rgba(10,16,26,.28),0 14px 40px rgba(10,16,26,.32);
+    --shadow-live:0 2px 4px rgba(10,16,26,.3),0 20px 56px rgba(10,16,26,.44),0 0 40px rgba(255,210,77,.10);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -24,14 +24,15 @@
     font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
   body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background:
-      radial-gradient(48% 34% at 42% -6%,rgba(255,201,0,.16),transparent 62%),
-      radial-gradient(40% 30% at 78% -8%,rgba(91,168,245,.14),transparent 65%)}
-  ::selection{background:rgba(255,201,0,.4)}
-  a:focus-visible,video:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:2px}
+      radial-gradient(50% 36% at 28% -8%,rgba(255,210,77,.13),transparent 60%),
+      radial-gradient(46% 34% at 80% -6%,rgba(126,195,255,.15),transparent 62%),
+      radial-gradient(30% 24% at 56% 6%,rgba(95,224,194,.06),transparent 60%)}
+  ::selection{background:rgba(255,210,77,.35)}
+  a:focus-visible,video:focus-visible{outline:2px solid var(--sky);outline-offset:3px;border-radius:2px}
 
-  /* ---------- 终端标题栏（保留元素，浅色玻璃） ---------- */
+  /* ---------- 终端标题栏（黛蓝玻璃） ---------- */
   .titlebar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
-    padding:10px 20px;background:rgba(250,249,246,.85);backdrop-filter:blur(14px);
+    padding:10px 20px;background:rgba(36,47,64,.8);backdrop-filter:blur(14px);
     border-bottom:1px solid var(--line)}
   .lights{display:flex;gap:7px}
   .lights i{width:11px;height:11px;border-radius:50%;display:block}
@@ -41,43 +42,42 @@
   .path b{color:var(--ink);font-weight:500}
   .titlebar nav{margin-left:auto;display:flex;gap:22px}
   .titlebar nav a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .15s}
-  .titlebar nav a:hover,.titlebar nav a:focus-visible{color:var(--amber)}
+  .titlebar nav a:hover,.titlebar nav a:focus-visible{color:var(--yellow)}
 
-  .wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 28px}
+  .wrap{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:0 28px}
 
-  /* ---------- Hero：特大黑字 + 高亮胶囊 ---------- */
-  .hero{padding:104px 0 84px}
-  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;color:var(--amber);
-    margin-bottom:26px}
-  h1{font-size:clamp(42px,6.4vw,74px);font-weight:600;line-height:1.2;letter-spacing:.01em;
-    max-width:15em}
-  h1 .hl{background:rgba(255,201,0,.38);border-radius:.18em;padding:0 .12em;
+  /* ---------- Hero：双栏（左大字，右 diff 码卡） ---------- */
+  .hero{display:grid;grid-template-columns:7fr 6fr;gap:56px;align-items:center;
+    padding:96px 0 88px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;color:var(--yellow);
+    margin-bottom:24px}
+  h1{font-size:clamp(38px,4.8vw,58px);font-weight:600;line-height:1.22;letter-spacing:.01em}
+  h1 .hl{background:var(--yellow);color:#20293A;border-radius:.18em;padding:0 .14em;
     box-decoration-break:clone;-webkit-box-decoration-break:clone}
-  .hero .lead{margin-top:26px;font-size:clamp(17px,1.8vw,20px);line-height:1.85;
-    color:var(--muted);max-width:34em}
-  .chips{margin-top:34px;display:flex;flex-wrap:wrap;gap:10px}
-  .chip{font-family:var(--mono);font-size:12.5px;color:#8A6100;
-    border:1px solid rgba(255,201,0,.55);border-radius:999px;padding:5px 14px;
-    background:rgba(255,201,0,.12)}
+  .hero .lead{margin-top:24px;font-size:clamp(16px,1.6vw,18.5px);line-height:1.9;
+    color:var(--muted);max-width:30em}
+  .chips{margin-top:32px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{font-family:var(--mono);font-size:12.5px;color:var(--yellow);
+    border:1px solid rgba(255,210,77,.4);border-radius:999px;padding:5px 14px;
+    background:rgba(255,210,77,.08)}
   .chip.gray{color:var(--muted);border-color:var(--line-strong);background:transparent}
 
-  /* 签名 diff 块：浅色码卡 */
-  .diff{max-width:780px;margin:64px auto 0;background:var(--card);
-    border:1px solid var(--line);border-radius:12px;overflow:hidden;
-    box-shadow:var(--shadow-soft)}
+  /* 签名 diff 块：深蓝码卡（Hero 右栏） */
+  .diff{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;box-shadow:var(--shadow-soft)}
   .diff-head{display:flex;justify-content:space-between;align-items:center;
     padding:9px 16px;border-bottom:1px solid var(--line);background:var(--chrome);
     font-family:var(--mono);font-size:12px;color:var(--faint)}
   .diff-head .fname{color:var(--muted)}
-  .diff pre{font-family:var(--mono);font-size:13.5px;line-height:2.15;padding:18px 0;
+  .diff pre{font-family:var(--mono);font-size:13px;line-height:2.15;padding:18px 0;
     overflow-x:auto;white-space:normal}
   .dl{display:flex;white-space:pre;opacity:0;transform:translateY(6px);
     animation:rise .5s ease forwards}
-  .dl .ln{width:52px;text-align:right;padding-right:16px;color:var(--faint);flex:none;
+  .dl .ln{width:48px;text-align:right;padding-right:14px;color:var(--faint);flex:none;
     user-select:none}
   .dl.hunk{color:var(--muted)}
-  .dl.del{background:rgba(209,77,98,.07)}.dl.del .code{color:var(--del)}
-  .dl.add{background:rgba(255,201,0,.12)}.dl.add .code{color:var(--amber)}
+  .dl.del{background:rgba(255,138,160,.07)}.dl.del .code{color:var(--del)}
+  .dl.add{background:rgba(255,210,77,.08)}.dl.add .code{color:var(--yellow)}
   .dl.ctx .code{color:var(--muted)}
   @keyframes rise{to{opacity:1;transform:none}}
 
@@ -85,17 +85,16 @@
   section,footer#status{padding:96px 0;border-top:1px solid var(--line)}
   .sec-eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;
     color:var(--faint);margin-bottom:16px}
-  .sec-eyebrow b{color:var(--amber);font-weight:500}
-  h2{font-size:clamp(28px,3.6vw,42px);font-weight:600;line-height:1.3;letter-spacing:.01em}
+  .sec-eyebrow b{color:var(--yellow);font-weight:500}
+  h2{font-size:clamp(28px,3.6vw,40px);font-weight:600;line-height:1.3;letter-spacing:.01em}
   h2 .dim{color:var(--faint);font-weight:600}
   .sec-lead{margin-top:14px;color:var(--muted);max-width:44em}
 
-  /* ---------- 白卡 mac 视频窗（签名元素） ---------- */
-  .window{position:relative;border-radius:14px;background:var(--card);
-    border:1px solid var(--line);overflow:hidden;
-    box-shadow:var(--shadow-soft);
+  /* ---------- 视频卡片窗（深蓝灰 mac 窗） ---------- */
+  .window{position:relative;border-radius:16px;background:var(--card);
+    border:1px solid var(--line);overflow:hidden;box-shadow:var(--shadow-soft);
     transition:box-shadow .5s ease,border-color .5s ease}
-  .window.live{border-color:rgba(255,201,0,.6);box-shadow:var(--shadow-live)}
+  .window.live{border-color:rgba(255,210,77,.5);box-shadow:var(--shadow-live)}
   .win-tab{display:flex;align-items:center;gap:10px;padding:9px 14px;
     border-bottom:1px solid var(--line);background:var(--chrome);
     font-family:var(--mono);font-size:12px}
@@ -103,59 +102,65 @@
   .win-tab .t{color:var(--muted)}
   .win-tab .side{margin-left:auto;color:var(--faint)}
   .win-tab .side.warn{color:var(--del)}
-  .shot{position:relative;aspect-ratio:16/10;background:#0E1014}
+  .shot{position:relative;aspect-ratio:16/10;background:var(--stage)}
   .shot video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .placeholder{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;
     align-items:center;justify-content:center;
     background:
-      linear-gradient(rgba(152,163,176,.12) 1px,transparent 1px) 0 0/100% 28px,
-      linear-gradient(90deg,rgba(152,163,176,.12) 1px,transparent 1px) 0 0/28px 100%}
+      linear-gradient(rgba(169,187,208,.08) 1px,transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg,rgba(169,187,208,.08) 1px,transparent 1px) 0 0/28px 100%}
   .shot.loaded .placeholder{display:none}
-  .placeholder .tag{font-family:var(--mono);font-size:12px;color:#B9C2CC;
-    border:1px dashed #3A424D;border-radius:6px;padding:6px 12px}
-  .placeholder .hint{font-size:12.5px;color:#7C8794}
+  .placeholder .tag{font-family:var(--mono);font-size:12px;color:var(--muted);
+    border:1px dashed var(--line-strong);border-radius:6px;padding:6px 12px}
+  .placeholder .hint{font-size:12.5px;color:var(--faint)}
 
   /* ---------- 01 运行对比 ---------- */
   .input-strip{margin-top:38px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     font-family:var(--mono);font-size:13px;color:var(--faint)}
   .input-strip .kbd{color:var(--ink);background:var(--card);border:1px solid var(--line-strong);
-    border-radius:6px;padding:4px 10px;box-shadow:0 1px 0 rgba(23,32,43,.04)}
+    border-radius:6px;padding:4px 10px}
   .vs{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:30px}
   .vs figcaption{padding:16px 4px 0}
   .vs figcaption h3{font-size:15.5px;font-weight:600}
   .vs figcaption p{margin-top:5px;font-size:13.5px;color:var(--muted);line-height:1.7}
 
-  /* 终端对比表：浅色码卡 */
+  /* 终端对比表：深蓝码卡 */
   .term{margin-top:52px;background:var(--card);border:1px solid var(--line);
-    border-radius:12px;padding:20px 22px;font-family:var(--mono);font-size:13.5px;
+    border-radius:14px;padding:20px 22px;font-family:var(--mono);font-size:13.5px;
     overflow-x:auto;box-shadow:var(--shadow-soft)}
   .term .cmd{color:var(--faint);margin-bottom:14px}
-  .term .cmd b{color:var(--amber);font-weight:500}
+  .term .cmd b{color:var(--yellow);font-weight:500}
   .trow{display:grid;grid-template-columns:9em 1fr 1fr;gap:14px;padding:8px 0;
     border-top:1px dashed var(--line);white-space:nowrap}
   .trow:first-of-type{border-top:none}
   .trow .k{color:var(--muted)}
   .trow .old{color:var(--faint)}
-  .trow .new{color:var(--amber)}
+  .trow .new{color:var(--yellow)}
   .trow.thead{color:var(--faint);font-size:12px;letter-spacing:.08em}
   .trow.thead .new{color:var(--faint)}
 
-  /* ---------- 02 功能演示：单列舞台序列 ---------- */
-  .feat{max-width:960px;margin:0 auto;padding:56px 0}
+  /* ---------- 02 功能演示：左右交错行 + 描边大编号 ---------- */
+  .feat{display:grid;grid-template-columns:minmax(250px,5fr) 8fr;gap:52px;
+    align-items:center;padding:64px 0}
   .feat + .feat{border-top:1px dashed var(--line)}
-  .feat-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:8px}
-  .fig{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;color:var(--amber)}
-  .feat-head h3{font-size:22px;font-weight:600}
-  .feat-head p{flex-basis:100%;color:var(--muted);font-size:14.5px;max-width:46em;
-    margin-top:2px}
-  .feat .window{margin-top:22px}
+  .feat.flip{grid-template-columns:8fr minmax(250px,5fr)}
+  .feat.flip .feat-copy{order:2}
+  .feat.flip .window{order:1}
+  .feat-copy .num{font-family:var(--mono);font-size:60px;font-weight:600;line-height:1;
+    color:transparent;-webkit-text-stroke:1px rgba(169,187,208,.4);margin-bottom:16px}
+  .fig{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--sky)}
+  .feat-copy h3{margin-top:8px;font-size:22px;font-weight:600}
+  .feat-copy p{margin-top:10px;color:var(--muted);font-size:14.5px;line-height:1.85}
 
   /* ---------- 03 状态 ---------- */
   .status{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:44px}
   .stat{border-top:2px solid var(--line-strong);padding-top:18px}
+  .stat:nth-child(1){border-top-color:rgba(255,210,77,.55)}
+  .stat:nth-child(2){border-top-color:rgba(126,195,255,.55)}
+  .stat:nth-child(3){border-top-color:rgba(95,224,194,.55)}
   .stat .k{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.12em}
   .stat .v{margin-top:10px;font-size:15px;line-height:1.75;color:var(--muted)}
-  .stat .v em{color:var(--amber);font-style:normal;font-weight:600}
+  .stat .v em{color:var(--yellow);font-style:normal;font-weight:600}
   .foot-note{margin-top:56px;font-family:var(--mono);font-size:12px;color:var(--faint)}
 
   /* 滚动进场 */
@@ -169,10 +174,13 @@
     html{scroll-behavior:auto}
   }
   @media (max-width:900px){
-    .hero{padding:64px 0 56px}
+    .hero{grid-template-columns:1fr;gap:44px;padding:60px 0 52px}
     .vs,.status{grid-template-columns:1fr}
     .trow{white-space:normal}
-    .feat{padding:44px 0}
+    .feat,.feat.flip{grid-template-columns:1fr;gap:20px;padding:44px 0}
+    .feat.flip .feat-copy{order:1}
+    .feat.flip .window{order:2}
+    .feat-copy .num{font-size:44px;margin-bottom:10px}
   }
 </style>
 </head>
@@ -190,14 +198,16 @@
 
   <!-- ================= Hero ================= -->
   <div class="hero">
-    <div class="eyebrow">AGENT STUDIO · CODE-FIRST</div>
-    <h1>从画布，到<span class="hl">代码</span>。</h1>
-    <p class="lead">同一条 AI 搜索业务链路：在可视化平台上是数十个节点的画布；
-      在 Agent Studio 里，是一个可读、可评测、可回放的 Python 项目。</p>
-    <div class="chips">
-      <span class="chip">已投入线上使用</span>
-      <span class="chip">多条工作流完成迁移</span>
-      <span class="chip gray">与工程团队共建放量中</span>
+    <div>
+      <div class="eyebrow">AGENT STUDIO · CODE-FIRST</div>
+      <h1>从画布，到<span class="hl">代码</span>。</h1>
+      <p class="lead">同一条 AI 搜索业务链路：在可视化平台上是数十个节点的画布；
+        在 Agent Studio 里，是一个可读、可评测、可回放的 Python 项目。</p>
+      <div class="chips">
+        <span class="chip">已投入线上使用</span>
+        <span class="chip">多条工作流完成迁移</span>
+        <span class="chip gray">与工程团队共建放量中</span>
+      </div>
     </div>
 
     <div class="diff" aria-label="迁移前后对比">
@@ -271,8 +281,12 @@
     <p class="sec-lead">每段 15–40 秒；滚动到某段自动播放，可拖动进度、全屏查看。</p>
 
     <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 01</span><h3>意图路由分支</h3>
-        <p>换一条目的地类输入（济州岛），Switch 路由自动进入目的地子流程——各意图分支都是独立的 Python 函数。</p></div>
+      <div class="feat-copy">
+        <div class="num">01</div>
+        <span class="fig">FIG 01 · ROUTE</span>
+        <h3>意图路由分支</h3>
+        <p>换一条目的地类输入（济州岛），Switch 路由自动进入目的地子流程——各意图分支都是独立的 Python 函数。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">route · 意图路由</span></div>
@@ -282,9 +296,13 @@
       </figure>
     </div>
 
-    <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 02</span><h3>调用链回放</h3>
-        <p>每一步的输入输出、耗时、token 成本自动留存；模型调用有独立明细，badcase 可一键转为评测用例。</p></div>
+    <div class="feat flip reveal">
+      <div class="feat-copy">
+        <div class="num">02</div>
+        <span class="fig">FIG 02 · TRACES</span>
+        <h3>调用链回放</h3>
+        <p>每一步的输入输出、耗时、token 成本自动留存；模型调用有独立明细，badcase 可一键转为评测用例。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">traces · 调用链回放</span></div>
@@ -295,8 +313,12 @@
     </div>
 
     <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 03</span><h3>评测系统</h3>
-        <p>用例集批量运行，自动评分加人工复核；改 prompt 前后，效果有量化对比。</p></div>
+      <div class="feat-copy">
+        <div class="num">03</div>
+        <span class="fig">FIG 03 · EVAL</span>
+        <h3>评测系统</h3>
+        <p>用例集批量运行，自动评分加人工复核；改 prompt 前后，效果有量化对比。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">eval · 评测系统</span></div>
@@ -306,9 +328,13 @@
       </figure>
     </div>
 
-    <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 04</span><h3>AB 实验与灰度</h3>
-        <p>变体、白名单、灰度比例都在平台内配置，调整即时生效，不需要重新发布。</p></div>
+    <div class="feat flip reveal">
+      <div class="feat-copy">
+        <div class="num">04</div>
+        <span class="fig">FIG 04 · EXPERIMENT</span>
+        <h3>AB 实验与灰度</h3>
+        <p>变体、白名单、灰度比例都在平台内配置，调整即时生效，不需要重新发布。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">ab · 实验与灰度</span></div>
@@ -319,8 +345,12 @@
     </div>
 
     <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 05</span><h3>模型中心</h3>
-        <p>模型统一接入管理，按业务方统计用量与成本；对比 Playground 支持 1–3 个模型同题并排（Max / Flash / Plus 多规格选型），比 TTFT、token 与耗时。</p></div>
+      <div class="feat-copy">
+        <div class="num">05</div>
+        <span class="fig">FIG 05 · MODELS</span>
+        <h3>模型中心</h3>
+        <p>模型统一接入管理，按业务方统计用量与成本；对比 Playground 支持 1–3 个模型同题并排（Max / Flash / Plus 多规格选型），比 TTFT、token 与耗时。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">models · 模型中心</span></div>
@@ -330,9 +360,13 @@
       </figure>
     </div>
 
-    <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 06</span><h3>IDE 与项目组织</h3>
-        <p>工作流、prompt、技能按多文件项目组织，Web IDE 内直接浏览编辑；保存即热加载、多节点自动同步，也可绑定 git 仓库。</p></div>
+    <div class="feat flip reveal">
+      <div class="feat-copy">
+        <div class="num">06</div>
+        <span class="fig">FIG 06 · IDE</span>
+        <h3>IDE 与项目组织</h3>
+        <p>工作流、prompt、技能按多文件项目组织，Web IDE 内直接浏览编辑；保存即热加载、多节点自动同步，也可绑定 git 仓库。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">ide · 项目与热加载</span></div>
@@ -343,8 +377,12 @@
     </div>
 
     <div class="feat reveal">
-      <div class="feat-head"><span class="fig">FIG 07</span><h3>使用文档</h3>
-        <p>配套使用手册与工作台同仓维护：平台总览、10 分钟上手、开发/运营工作区指南、API 参考，工作台内一键直达。</p></div>
+      <div class="feat-copy">
+        <div class="num">07</div>
+        <span class="fig">FIG 07 · DOCS</span>
+        <h3>使用文档</h3>
+        <p>配套使用手册与工作台同仓维护：平台总览、10 分钟上手、开发/运营工作区指南、API 参考，工作台内一键直达。</p>
+      </div>
       <figure class="window">
         <div class="win-tab"><span class="lights"><i></i><i></i><i></i></span>
           <span class="t">docs · 使用手册</span></div>
