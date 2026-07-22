@@ -9,7 +9,7 @@
      布局改版：Hero 双栏（左大字右 diff 卡），功能演示左右交错行 + 描边大编号。
      色彩纪律：黄=品牌与强调，天蓝=结构标签（FIG/侧标），正文只用亮灰两级。 */
   :root{
-    --bg:#242F40; --card:#2C394D; --chrome:#334158; --stage:#0E1014;
+    --bg:#1D2634; --card:#253243; --chrome:#2C3A4F; --stage:#0E1014;
     --line:rgba(214,228,245,.13); --line-strong:rgba(214,228,245,.22);
     --ink:#F1F6FC; --muted:#A9BBD0; --faint:#7A8DA6;
     --yellow:#FFD24D; --sky:#7EC3FF; --mint:#5FE0C2; --del:#FF8AA0;
@@ -32,7 +32,7 @@
 
   /* ---------- 终端标题栏（黛蓝玻璃） ---------- */
   .titlebar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
-    padding:10px 20px;background:rgba(36,47,64,.8);backdrop-filter:blur(14px);
+    padding:10px 20px;background:rgba(29,38,52,.8);backdrop-filter:blur(14px);
     border-bottom:1px solid var(--line)}
   .lights{display:flex;gap:7px}
   .lights i{width:11px;height:11px;border-radius:50%;display:block}
@@ -146,8 +146,8 @@
   .feat.flip{grid-template-columns:8fr minmax(250px,5fr)}
   .feat.flip .feat-copy{order:2}
   .feat.flip .window{order:1}
-  .feat-copy .num{font-family:var(--mono);font-size:60px;font-weight:600;line-height:1;
-    color:transparent;-webkit-text-stroke:1px rgba(169,187,208,.4);margin-bottom:16px}
+  .feat-copy .num{font-family:var(--mono);font-size:54px;font-weight:300;line-height:1;
+    color:rgba(169,187,208,.2);letter-spacing:.05em;margin-bottom:14px}
   .fig{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--sky)}
   .feat-copy h3{margin-top:8px;font-size:22px;font-weight:600}
   .feat-copy p{margin-top:10px;color:var(--muted);font-size:14.5px;line-height:1.85}
@@ -180,7 +180,7 @@
     .feat,.feat.flip{grid-template-columns:1fr;gap:20px;padding:44px 0}
     .feat.flip .feat-copy{order:1}
     .feat.flip .window{order:2}
-    .feat-copy .num{font-size:44px;margin-bottom:10px}
+    .feat-copy .num{font-size:38px;margin-bottom:10px}
   }
 </style>
 </head>
